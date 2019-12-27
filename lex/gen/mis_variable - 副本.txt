@@ -1,0 +1,1 @@
+{"risk_score": "Order", "hypertension_Diagnose_Stage": "Order", "DM_Diagnose": "Order", "HUA_Diagnose": "Order", "irenal_artery_Bistenosis": "PastHistory", "abnormal_renal_function": "PastHistory", "Ccr": "Order", "DM_kidney": "PastHistory", "renal_artery_stenosis": "PastHistory", "Nephropathy": "PastHistory", "lack_of_exercise": "PastHistory"}

@@ -1,0 +1,357 @@
+package com.sample.rules
+
+import com.sample.Result;
+import com.sample.Patient;
+import com.sample.deffunction;
+
+function double FourInFiveOut(double $InputNum) {
+	double $Integer,$BelowPoint,$Result;
+	$Integer = (int)$InputNum / (int)1;
+	$BelowPoint = $InputNum - $Integer;
+	if ($BelowPoint <= 0.25) {
+		$Result = $Integer;
+	}else {
+		if ($BelowPoint > 0.25 && $BelowPoint <= 0.75) {
+			$Result = $Integer + 0.5;
+		}else {
+			$Result = $Integer + 1;
+		}
+	}
+	return $Result;
+}
+
+//总热卡参数确定rule "SportLevelConfirm"
+	when
+		$p : Patient( $SportType : SportType != null, $BMI : BMI != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $SportLevel;
+		if ($SportType == "NO" || $SportType == "SICKBED") {
+			$SportLevel = 25;
+		}
+		if ($SportType == "FREEDEGREE" || $SportType == "LOWDEGREE") {
+			$SportLevel = 30;
+		}
+		if ($SportType == "MIDDLEDEGREE" || $SportType == "HIGHDEGREE") {
+			$SportLevel = 35;
+		}
+		if ($BMI <= 20) {
+			$SportLevel = $SportLevel + 5;
+		}
+		if ($BMI >= 25) {
+			$SportLevel = $SportLevel - 5;
+		}
+		// (printout t "SportLevel = " ?SportLevel crlf)
+		//(assert (SportLevel ?SportLevel))
+		modify ($p) { SportLevel = $SportLevel };
+end
+
+rule "IdealBMIConfirm"
+	when
+		$p : Patient( $Height : Height != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $IdealBMI;
+		$Height = (double)$Height / (double)100;
+		if ($Height < 1.50) {
+			$IdealBMI = 21;
+		}
+		if ($Height >= 1.50 && $Height < 1.65) {
+			$IdealBMI = 22;
+		}
+		if ($Height >= 1.65 && $Height < 1.85) {
+			$IdealBMI = 23;
+		}
+		if ($Height >= 1.85) {
+			$IdealBMI = 24;
+		}
+		//(printout t "IdealBMI = " ?IdealBMI crlf)
+		//(assert (IdealBMI ?IdealBMI))
+		modify ($p) { IdealBMI = $IdealBMI };
+end
+
+rule "SexCoeffConfirm"
+	when
+		$p : Patient( $Sex : Sex != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $SexCoeff;
+		if ($Sex == "male") {
+			$SexCoeff = 1;
+		}
+		if ($Sex == "female") {
+			$SexCoeff = 0.95;
+		}
+		printout = t
+		//(assert (SexCoeff ?SexCoeff))
+		modify ($p) { SexCoeff = $SexCoeff };
+end
+
+rule "AgeCoeffConfirm"
+	when
+		$p : Patient( $Age : Age != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $AgeCoeff;
+		if ($Age < 25) {
+			$AgeCoeff = 1.05;
+		}
+		if ($Age >= 25 && $Age < 55) {
+			$AgeCoeff = 1.00;
+		}
+		if ($Age >= 55 && $Age < 65) {
+			$AgeCoeff = 0.95;
+		}
+		if ($Age >= 65 && $Age < 75) {
+			$AgeCoeff = 0.90;
+		}
+		if ($Age >= 75 && $Age < 85) {
+			$AgeCoeff = 0.85;
+		}
+		if ($Age >= 85) {
+			$AgeCoeff = 0.80;
+		}
+		//(printout t "AgeCoeff = " ?AgeCoeff crlf)
+		//(assert (AgeCoeff ?AgeCoeff))
+		modify ($p) { AgeCoeff = $AgeCoeff };
+end
+
+rule "DiseaseStatusCoeffConfirm"
+	when
+		$p : Patient( $DiseaseStatus : DiseaseStatus != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $DiseaseStatusCoeff;
+		if ($DiseaseStatus == "COMMON") {
+			$DiseaseStatusCoeff = 1.00;
+		}
+		if ($DiseaseStatus == "SPECIAL") {
+			$DiseaseStatusCoeff = 1.05;
+		}
+		//(printout t "DiseaseStatusCoeff = " ?DiseaseStatusCoeff crlf)
+		//(assert (DiseaseStatusCoeff ?DiseaseStatusCoeff))
+		modify ($p) { DiseaseStatusCoeff = $DiseaseStatusCoeff };
+end
+
+rule "TKcalCalc"
+	when
+		$p : Patient( $SportLevel : SportLevel != null, $IdealBMI : IdealBMI != null, $Height : Height != null, $SexCoeff : SexCoeff != null, $AgeCoeff : AgeCoeff != null, $DiseaseStatusCoeff : DiseaseStatusCoeff != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $TKcal;
+		$Height = (double)$Height / (double)100;
+		$TKcal = ((((($SportLevel * $IdealBMI) * $Height) * $Height) * $SexCoeff) * $AgeCoeff) * $DiseaseStatusCoeff;
+		$TKcal = ((int)$TKcal / (int)5) * 5;
+		//(printout t "总热卡为 = " ?TKcal crlf)
+		//(assert (TKcal ?TKcal))
+		modify ($p) { TKcal = $TKcal };
+end
+
+//食物类别分配rule "Protein_Carbo_Fat_AmountCalc"
+	when
+		$p : Patient( $Dyslipidemia_Diagnose_TG : Dyslipidemia_Diagnose_TG != null, $Dyslipidemia_Diagnose_TC : Dyslipidemia_Diagnose_TC != null, $Sex : Sex != null, $Age : Age != null, $Weight : Weight != null, $Cr_Variable : Cr_Variable != null, $ACr_Variable : ACr_Variable != null, $IdealBMI : IdealBMI != null, $Height : Height != null, $TKcal : TKcal != null, $UrineProtein : UrineProtein != null, $HUA_Diagnose : HUA_Diagnose != null, $DM_History : DM_History != null, $DM_Diagnose : DM_Diagnose != null, $HUA_Diagnose : HUA_Diagnose != null, $Hypertension_Diagnose : Hypertension_Diagnose != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $FatAmount_Temp,$CarboRatioLimit,$BaseProteinAmount,$Ccr,$ProteinAmount_Temp,$ProteinRatio_Temp,$ProteinRatio,$ProteinAmount,$TKProtein,$CarboRatio_Temp,$CarboRatio,$CarboAmount,$TKCarbo,$FatRatio,$FatAmount,$TKFat,$MeatAmount,$TotalCarboWithoutFruit,$MainFood,$Fruit,$Vegetable,$TotalCarbo,$Meat,$TotalProtein,$TotalFat;
+		String $DietaryType;
+		$DietaryType = "F";
+		if ($DM_History == "YES" || $DM_Diagnose == "IGT" || $DM_Diagnose == "IFG" || $DM_Diagnose == "T1DM" || $DM_Diagnose == "T2DM" || $DM_Diagnose == "DM" || $DM_Diagnose == "DM_NoneType" || $DM_Diagnose == "IGR") {
+			$DietaryType = $DietaryType + "1";
+		}
+		if ($HUA_Diagnose == "Hyperuricaemia") {
+			$DietaryType = $DietaryType + "4";
+		}
+		if ($Hypertension_Diagnose == "Hypertension") {
+			$DietaryType = $DietaryType + "3";
+		}
+		$Height = (double)$Height / (double)100;
+		if ($Dyslipidemia_Diagnose_TG == "Dyslipidemia_TG") {
+			$FatAmount_Temp = 20;
+			$CarboRatioLimit = 55;
+			//(Recommendation "忌干果")
+			modify ($p) { Nut = "YES" };
+			$DietaryType = $DietaryType + "2";
+		}else {
+			$FatAmount_Temp = 30;
+			$CarboRatioLimit = 50;
+			modify ($p) { Nut = "NO" };
+		}
+		if ($Dyslipidemia_Diagnose_TC == "Dyslipidemia_TC") {
+			//(printout t "忌食动物内脏" crlf)
+			$r.Recommendation( "忌食动物内脏" );
+			$DietaryType = $DietaryType + "5";
+		}
+		modify ($p) { DietaryType = $DietaryType };
+		$BaseProteinAmount = 1.2;
+		if ($Sex == "male") {
+			$Ccr = (int)(((140 - $Age) * $Weight) * 1.228) / (int)$Cr_Variable;
+		}
+		if ($Sex == "female") {
+			$Ccr = (int)(((140 - $Age) * $Weight) * 1.04) / (int)$Cr_Variable;
+		}
+		//(assert (Ccr ?Ccr))
+		//(printout t "Ccr = " ?Ccr crlf)
+		modify ($p) { Ccr = $Ccr };
+		if ($Ccr < 80) {
+			$BaseProteinAmount = $BaseProteinAmount - 0.2;
+		}
+		//reivsed by wbf 081229 尿蛋白定量单位由mg/日转换为g/日
+		if ($HUA_Diagnose == "Hyperuricaemia" || $ACr_Variable > 30 && $ACr_Variable < 300 || $UrineProtein > 0.15 && $UrineProtein < 3.5) {
+			$BaseProteinAmount = $BaseProteinAmount - 0.2;
+		}
+		//reivsed by wbf 081229 尿蛋白定量单位由mg/日转换为g/日
+		if ($Ccr < 50 || $ACr_Variable >= 300 || $UrineProtein >= 3.5) {
+			$BaseProteinAmount = $BaseProteinAmount - 0.2;
+		}
+		if ($Ccr < 10) {
+			$BaseProteinAmount = $BaseProteinAmount - 0.2;
+		}
+		//(printout t "BaseProteinAmount = " ?BaseProteinAmount crlf)
+		if ($HUA_Diagnose == "Hyperuricaemia") {
+			//(printout t "低嘌呤饮食（忌植物蛋白）" crlf)
+			$r.Recommendation( "低嘌呤饮食（忌植物蛋白）" );
+		}
+		if ($Ccr < 50) {
+			//(printout t "宜优质蛋白" crlf)
+			$r.Recommendation( "宜优质蛋白" );
+		}
+		if ($Ccr < 10) {
+			//(printout t "补充a酮酸" crlf)
+			$r.Recommendation( "补充a酮酸" );
+		}
+		modify( $p ) { BaseProteinAmount = ?BaseProteinAmount };
+		$ProteinAmount_Temp = (($BaseProteinAmount * $IdealBMI) * $Height) * $Height;
+		modify( $p ) { ProteinAmount_Temp = ?ProteinAmount_Temp };
+		$ProteinRatio_Temp = (int)($ProteinAmount_Temp * 1000) / (int)$TKcal;
+		modify( $p ) { ProteinRatio_Temp = ?ProteinRatio_Temp };
+		if ($ProteinRatio_Temp <= 30) {
+			$ProteinRatio = $ProteinRatio_Temp;
+			$ProteinAmount = $ProteinAmount_Temp;
+		}else {
+			$ProteinRatio = 30;
+			$ProteinAmount = $TKcal * 0.03;
+		}
+		$TKProtein = (int)($ProteinRatio * $TKcal) / (int)100;
+		//(printout t "蛋白质比例 = " ?ProteinRatio crlf)
+		//(assert (ProteinRatio ?ProteinRatio))
+		modify ($p) { ProteinRatio = $ProteinRatio };
+		//(bind ?ProteinAmount (div ?ProteinAmount 1))
+		//(printout t "蛋白质可食入量 = " ?ProteinAmount crlf)
+		modify ($p) { ProteinAmount = $ProteinAmount };
+		$CarboRatio_Temp = (100 - $ProteinRatio) - ((int)($FatAmount_Temp * 9) / (int)$TKcal);
+		if ($CarboRatio_Temp <= $CarboRatioLimit) {
+			$CarboRatio = $CarboRatio_Temp;
+			$CarboAmount = (int)(($TKcal - ((int)($ProteinRatio * $TKcal) / (int)100)) - ($FatAmount_Temp * 9)) / (int)4;
+		}else {
+			$CarboRatio = $CarboRatioLimit;
+			$CarboAmount = (int)($CarboRatioLimit * $TKcal) / (int)400;
+		}
+		$TKCarbo = (int)($CarboRatio * $TKcal) / (int)100;
+		//(printout t "糖类比例 = " ?CarboRatio crlf)
+		//(assert (CarboRatio ?CarboRatio))
+		modify ($p) { CarboRatio = $CarboRatio };
+		//(bind ?CarboAmount (* 5 (div ?CarboAmount 5)))
+		//(printout t "糖类可食入量 = " ?CarboAmount crlf)
+		//(assert (CarboAmount ?CarboAmount))
+		modify ($p) { CarboAmount = $CarboAmount };
+		$FatRatio = (100 - $CarboRatio) - $ProteinRatio;
+		$FatAmount = (int)($FatRatio * $TKcal) / (int)900;
+		$TKFat = (int)($FatRatio * $TKcal) / (int)100;
+		//(printout t "脂肪比例 = " ?FatRatio crlf)
+		//(assert (FatRatio ?FatRatio))
+		modify ($p) { FatRatio = $FatRatio };
+		//(printout t "脂肪可食入量 = " ?FatAmount crlf)
+		//(assert (FatAmount ?FatAmount))
+		modify ($p) { FatAmount = $FatAmount };
+		$MeatAmount = (($ProteinAmount - ($CarboAmount * 0.07)) - 15.75) * 5.556;
+		$MeatAmount = 5 * ((int)$MeatAmount / (int)5);
+		//(printout t "瘦肉可食入量 = " ?MeatAmount crlf)
+		//(assert (MeatAmount ?MeatAmount))
+		modify ($p) { MeatAmount = $MeatAmount };
+		//(assert (MilkAmount 250))
+		//(printout t "牛奶食入量 = " 250 crlf)
+		modify ($p) { MilkAmount = 250 };
+		//(assert (EggAmount 1))
+		//(printout t "鸡蛋个数 = " 1 crlf)
+		modify ($p) { EggAmount = 1 };
+		$TotalCarboWithoutFruit = ((double)($CarboAmount * 4) / (double)90) - 1;
+		$MainFood = $TotalCarboWithoutFruit;
+		//(printout t "主食份 = " ?MainFood crlf)
+		$MainFood = FourInFiveOut( $MainFood );
+		//(assert (MainFood ?MainFood))
+		modify ($p) { MainFood = $MainFood };
+		$Fruit = 1;
+		//(printout t "水果份 = " ?Fruit crlf)
+		//(bind ?Fruit (FourInFiveOut ?Fruit))
+		//(assert (Fruit ?Fruit))
+		modify ($p) { Fruit = $Fruit };
+		//(bind ?Vegetable (* ?MainFood 0.25))
+		//(if(< ?Vegetable 1)
+		//then
+		//(bind ?Vegetable 1)
+		//)
+		//(printout t "蔬菜份 = " ?Vegetable crlf)
+		//(assert (Vegetable ?Vegetable))
+		$Vegetable = FourInFiveOut( 1 );
+		modify ($p) { Vegetable = $Vegetable };
+		$TotalCarbo = ($MainFood + $Fruit) + $Vegetable;
+		modify ($p) { TotalCarbo = $TotalCarbo };
+		$Meat = (double)$MeatAmount / (double)50;
+		//(printout t "瘦肉份 = " ?Meat crlf)
+		//(assert (Meat ?Meat))
+		$Meat = FourInFiveOut( $Meat );
+		modify ($p) { Meat = $Meat };
+		$TotalProtein = $Meat + 2.5;
+		modify ($p) { TotalProtein = $TotalProtein };
+		$TotalFat = (double)$FatAmount / (double)10;
+		$TotalFat = FourInFiveOut( $TotalFat );
+		//(printout t "脂肪份 = " ?TotalFat crlf)
+		//(assert (TotalFat ?TotalFat))
+		modify ($p) { TotalFat = $TotalFat };
+		//(printout t "食用油份 = " ?TotalFat crlf)
+		//(assert (Oil ?TotalFat))
+		modify ($p) { Oil = $TotalFat };
+end
+
+//水盐定量rule "WaterAndSaltConfirm"
+	when
+		$p : Patient( $Fat_Diagnose : Fat_Diagnose != null, $Weight : Weight != null, $Hypertension_Diagnose : Hypertension_Diagnose != null, $Ccr : Ccr != null )
+		$r : Result()
+		$f : deffunction()
+	then
+		double $MaxWater,$MinWater,$Salt;
+		$MaxWater = $Weight * 40;
+		$MinWater = $Weight * 30;
+		if ($Ccr <= 30) {
+			$MaxWater = $MaxWater * 0.8;
+			$MaxWater = 100 * ((int)$MaxWater / (int)100);
+			$MinWater = $MinWater * 0.8;
+			$MinWater = 100 * ((int)$MinWater / (int)100);
+		}
+		//(printout t "食用水" ?MinWater"~" ?MaxWater "ml/日" crlf)
+		//(assert (MaxWater ?MaxWater))
+		//(assert (MinWater ?MinWater))
+		modify ($p) { MaxWater = $MaxWater };
+		modify ($p) { MinWater = $MinWater };
+		if ($Ccr <= 30) {
+			$Salt = 5;
+		}else {
+			if ($Hypertension_Diagnose == "Hypertension" || $Fat_Diagnose == "Fat") {
+				$Salt = 6;
+			}else {
+				$Salt = 8;
+			}
+		}
+		//(printout t "食用盐" ?Salt "g/日" crlf)
+		//(assert (Salt ?Salt))
+		modify ($p) { Salt = $Salt };
+		//add by wbf 081230防止规则被重复触发
+end
+
