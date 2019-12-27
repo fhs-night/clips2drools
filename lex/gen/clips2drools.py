@@ -885,7 +885,7 @@ class droolsemitter(clipsparserListener):
                 self.description = 1
                 self.formatText_number += 1
                 buf = 'FormatText $formatText%s = new FormatText();\n' % self.formatText_number
-                buf += '$formatText%s.setValue( %s );\n' % (self.formatText_number, para)
+                buf += '$formatText%s.setValue( %s + " " );\n' % (self.formatText_number, para)
                 if "无糖尿病" in para:
                     buf += '$formatText%s.setType(5)' % self.formatText_number
                 elif "高血压:无" in para:
