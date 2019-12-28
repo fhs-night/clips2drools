@@ -60,6 +60,7 @@ def main():
         new_drl_file.write(str)  # 写入新文件
         new_drl_file.close()
         i = i + 1
+    #    测试
     # # 保存所有变量
     # var_save = open('entrance_variable.txt','w')
     # en_json = json.dumps(member_variable)
