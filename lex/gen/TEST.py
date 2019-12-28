@@ -51,6 +51,7 @@ def main():
         str += 'import cdss.kb.core.engineOutputModel.Process;\n'
         str += 'import cdss.kb.core.engineOutputModel.Problem;\n'
         str += 'import cdss.kb.core.engineOutputModel.Scenario;\n\n\n'
+        # 进一步测试
 
         str += listener.getDRL(a)  # 翻译后内容
         # member_variable.update(listener.variable)
