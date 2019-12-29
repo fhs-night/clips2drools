@@ -39,6 +39,8 @@ class Drl_Match(clipsparserListener):
     deffunc_name = ''  # 存放当前自定义函数名
     history = 0  # 检测是否有病史数据出现 0:出现 1：不出现
     drool = 0  # 判断当前文件是否为终点 1:是 0: 不是
+    ms_ms_mergexml = '' # 判断当前MS_MS_mergexml_Instance用于何种诊断
+
 
     def __init__(self, filename: str):
         self.drools = {}
@@ -83,6 +85,8 @@ class Drl_Match(clipsparserListener):
         self.deffunc_name = ''
         self.history = 0
         self.drool = 0
+        self.ms_ms_mergexml = ''
+
 
     def getDRL(self, ctx):
         return self.drools[ctx]
@@ -157,68 +161,6 @@ class Drl_Match(clipsparserListener):
             buf += '%s' % rhs
         else:
             buf += '%s\n' % rhs
-        if self.Recommendation > 0:
-            if self.formatText_number > 0:
-                buf += '\t\tDescription $description = new Description();\n'
-                for i in range(self.formatText_number):
-                    buf += '\t\t$description.addFormatText( $formatText%s );\n' % (i + 1)
-                buf += '\t\tTask $task = new Task();\n'
-                buf += '\t\t$task.setDescription( $description );\n'
-                if ('MS_DM' or 'MS_MS_mergexml') in self.filename:
-                    if self.drool != 1:
-                        buf += '\t\tFormatText $formatText_expl = new FormatText();\n'
-                        buf += '\t\t$formatText_expl.setValue( "血糖 " + $Patient.getLabTestResult(' \
-                               '"FBG_Variable").getResult() + " " + $Patient.getLabTestResult(' \
-                               '"FBG_Variable").getUnit() ' \
-                               ');\n '
-                        buf += '\t\tDescription expl = new Description();\n'
-                        buf += '\t\texpl.addFormatText($formatText_expl);\n'
-                        buf += '\t\tArrayList<Description> EXPL = new ArrayList<>();\n'
-                        buf += '\t\tEXPL.add(expl);\n'
-                        buf += '\t\t$task.setExplanation(EXPL);\n'
-                    buf += '\t\t$scenario.getProblem("糖尿病诊断").addTask($task);\n'
-
-                elif 'MS_Hypertension' in self.filename:
-                    if self.drool != 1:
-                        buf += '\t\tFormatText $formatText_explanation = new FormatText();\n'
-                        buf += '\t\t$formatText_explanation.setValue( "血压 " + $Patient.getLabTestResult(' \
-                               '"DBP_Top_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
-                               '"SBP_Top_Variable").getResult() ' \
-                               ');\n '
-                        buf += '\t\tDescription explanation = new Description();\n'
-                        buf += '\t\texplanation.addFormatText($formatText_explanation);\n'
-                        buf += '\t\tArrayList<Description> explanationList = new ArrayList<>();\n'
-                        buf += '\t\texplanationList.add(explanation);\n'
-                        buf += '\t\t$task.setExplanation(explanationList);\n'
-                    buf += '\t\t$scenario.getProblem("高血压诊断").addTask($task);\n'
-                elif 'MS_Dyslipidemia' in self.filename:
-                    if self.drool != 1:
-                        buf += '\t\tFormatText $formatText_explanation1 = new FormatText();\n'
-                        buf += '\t\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
-                               '"TC_Variable").getResult() + " " + $Patient.getLabTestResult("TC_Variable").getUnit() ' \
-                               ');\n '
-                        buf += '\t\tFormatText $formatText_explanation2 = new FormatText();\n'
-                        buf += '\t\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
-                               '"TG_Variable").getResult() + "-" + $Patient.getLabTestResult("TG_Variable").getUnit() ' \
-                               ');\n '
-                        buf += '\t\tFormatText $formatText_explanation3 = new FormatText();\n'
-                        buf += '\t\t$formatText_explanation2.setValue( "HDL-C " + $Patient.getLabTestResult(' \
-                               '"HDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
-                               '"HDLch_Variable").getUnit() ' \
-                               ');\n '
-                        buf += '\t\tFormatText $formatText_explanation4 = new FormatText();\n'
-                        buf += '\t\t$formatText_explanation2.setValue( "LDL-C " + $Patient.getLabTestResult(' \
-                               '"LDLch_Variable").getResult() + "-" + $Patient.getLabTestResult("LDLch_Variable").getUnit() ' \
-                               ');\n '
-                        buf += '\t\tDescription explanation = new Description();\n'
-                        buf += '\t\texplanation.addFormatText($formatText_explanation1);\n'
-                        buf += '\t\texplanation.addFormatText($formatText_explanation2);\n'
-                        buf += '\t\texplanation.addFormatText($formatText_explanation3);\n'
-                        buf += '\t\texplanation.addFormatText($formatText_explanation4);\n'
-                        buf += '\t\tArrayList<Description> explanationList = new ArrayList<>();\n'
-                        buf += '\t\texplanationList.add(explanation);\n'
-                        buf += '\t\t$task.setExplanation(explanationList);\n'
-                    buf += '\t\t$scenario.getProblem("血脂紊乱诊断").addTask($task);\n'
         buf += 'end\n\n'
         return buf
 
@@ -297,9 +239,8 @@ class Drl_Match(clipsparserListener):
         # 用于判断recommendation是否在if_then结构中
         if self.NotifyOrNot == 1 and self.construct == 'defrule':
             if self.formatText_number > 0:
-                if ('MS_DM' or 'MS_MS_mergexml') in self.filename:
+                if ('MS_DM' in self.filename) or (self.ms_ms_mergexml == '糖尿病'):
                     buf += '\tDescription $description = new Description();\n'
-                    # buf += '\tif($scenario.getProblem("糖尿病诊断").getTasks().size() != 0){\n'
                     buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
                            '"入院筛查").getTaskById("糖尿病")!=null){\n '
                     for i in range(self.formatText_number):
@@ -319,22 +260,28 @@ class Drl_Match(clipsparserListener):
                     buf += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").addTask(' \
                            '$Task);\n '
                     buf += '\t}\n'
-                    if self.drool != 1:
-                        buf += '\tFormatText $formatText_explanation = new FormatText();\n'
-                        buf += '\t$formatText_explanation.setValue( "血糖 " + $Patient.getLabTestResult(' \
+                    buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
+                           '"入院筛查").getTaskById("糖尿病").getExplanation()==null){\n '
+                    buf += '\t\tFormatText $formatText_explanation = new FormatText();\n'
+                    if "FBG_Variable" in self.beizhong_variable:
+                        buf += '\t\t$formatText_explanation.setValue( "血糖 " + $Patient.getLabTestResult(' \
                                '"%s").getResult() + " " + $Patient.getLabTestResult(' \
-                               '"%s").getUnit());\n ' % (
-                                   self.beizhong_variable["FBG_Variable"], self.beizhong_variable["FBG_Variable"])
-                        buf += '\t$formatText_explanation.setType(8);\n'
-                        buf += '\tDescription explanation = new Description();\n'
-                        buf += '\texplanation.addFormatText($formatText_explanation);\n'
-                        buf += '\tArrayList<Description> explanationList = new ArrayList<>();\n'
-                        buf += '\texplanationList.add(explanation);\n'
-                        buf += '\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
-                               '"入院筛查").getTaskById("糖尿病").setExplanation(explanationList);\n '
+                               '"%s").getUnit());\n ' % (self.beizhong_variable["FBG_Variable"],self.beizhong_variable["FBG_Variable"])
+                    else:
+                        buf += '\t\t$formatText_explanation.setValue( "血糖 " + $Patient.getLabTestResult(' \
+                               '"FBG_Variable").getResult() + " " + $Patient.getLabTestResult(' \
+                               '"FBG_Variable").getUnit());\n '
+                    buf += '\t\t$formatText_explanation.setType(8);\n'
+                    buf += '\t\tDescription explanation = new Description();\n'
+                    buf += '\t\texplanation.addFormatText($formatText_explanation);\n'
+                    buf += '\t\tArrayList<Description> explanationList = new ArrayList<>();\n'
+                    buf += '\t\texplanationList.add(explanation);\n'
+                    buf += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
+                           '"入院筛查").getTaskById("糖尿病").setExplanation(explanationList);\n '
+                    buf += '\t}\n'
+
                 elif 'MS_Hypertension' in self.filename:
                     buf += '\tDescription $description = new Description();\n'
-                    # buf += '\tif($scenario.getProblem("糖尿病诊断").getTasks().size() != 0){\n'
                     buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
                            '"入院筛查").getTaskById("高血压")!=null){\n '
                     for i in range(self.formatText_number):
@@ -354,27 +301,32 @@ class Drl_Match(clipsparserListener):
                     buf += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").addTask(' \
                            '$Task);\n '
                     buf += '\t}\n'
-                    if self.drool != 1:
-                        buf += '\tFormatText $formatText_explanation = new FormatText();\n'
-                        if "DBP_Top_Variable" in self.beizhong_variable:
-                            buf += '\t$formatText_explanation.setValue( "血压 " + $Patient.getLabTestResult(' \
-                                   '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getResult());\n ' % (
-                                       self.beizhong_variable["DBP_Top_Variable"],
-                                       self.beizhong_variable["SBP_Top_Variable"])
-                        else:
-                            buf += '\t$formatText_explanation.setValue( "血压 " + $Patient.getLabTestResult(' \
-                                   '"DBP_Top_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
-                                   '"SBP_Top_Variable").getResult());\n'
-                        buf += '\t$formatText_explanation.setType(8);\n'
-                        buf += '\tDescription explanation = new Description();\n'
-                        buf += '\texplanation.addFormatText($formatText_explanation);\n'
-                        buf += '\tArrayList<Description> explanationList = new ArrayList<>();\n'
-                        buf += '\texplanationList.add(explanation);\n'
-                        buf += '\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
-                               '"入院筛查").getTaskById("高血压").setExplanation(explanationList);\n '
+                    buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
+                           '"入院筛查").getTaskById("高血压").getExplanation()==null){\n '
+                    buf += '\t\tFormatText $formatText_explanation = new FormatText();\n'
+                    if "DBP_Top_Variable" in self.beizhong_variable:
+                        buf += '\t\t$formatText_explanation.setValue("血压 " + $Patient.getLabTestResult(' \
+                               '"%s").getResult() + "-" + $Patient.getLabTestResult(' \
+                               '"%s").getResult() + " " + $Patient.getLabTestResult(' \
+                               '"%s").getUnit());\n ' % (
+                               self.beizhong_variable["DBP_Top_Variable"], self.beizhong_variable["SBP_Top_Variable"],
+                               self.beizhong_variable["SBP_Top_Variable"])
+                    else:
+                        buf += '\t\t$formatText_explanation.setValue("血压 " + $Patient.getLabTestResult(' \
+                               '"DBP_Top_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
+                               '"SBP_Top_Variable").getResult() + " " + $Patient.getLabTestResult(' \
+                               '"SBP_Top_Variable").getUnit());\n '
+                    buf += '\t\t$formatText_explanation.setType(8);\n'
+                    buf += '\t\tDescription explanation = new Description();\n'
+                    buf += '\t\texplanation.addFormatText($formatText_explanation);\n'
+                    buf += '\t\tArrayList<Description> explanationList = new ArrayList<>();\n'
+                    buf += '\t\texplanationList.add(explanation);\n'
+                    buf += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
+                           '"入院筛查").getTaskById("高血压").setExplanation(explanationList);\n '
+                    buf += '\t}\n'
+
                 elif 'MS_Dyslipidemia' in self.filename:
                     buf += '\tDescription $description = new Description();\n'
-                    # buf += '\tif($scenario.getProblem("糖尿病诊断").getTasks().size() != 0){\n'
                     buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
                            '"入院筛查").getTaskById("血脂紊乱")!=null){\n '
                     for i in range(self.formatText_number):
@@ -394,38 +346,70 @@ class Drl_Match(clipsparserListener):
                     buf += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").addTask(' \
                            '$Task);\n '
                     buf += '\t}\n'
-                    if self.drool != 1:
-                        buf += '\tFormatText $formatText_explanation1 = new FormatText();\n'
-                        buf += '\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
-                               '"%s").getResult() + " " + $Patient.getLabTestResult("%s").getUnit() ' \
-                               ');\n ' % (self.beizhong_variable["TC_Variable"], self.beizhong_variable["TC_Variable"])
-                        buf += '\t$formatText_explanation1.setType(8);\n'
-                        buf += '\tFormatText $formatText_explanation2 = new FormatText();\n'
-                        buf += '\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
-                               '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
-                               ');\n ' % (self.beizhong_variable["TG_Variable"], self.beizhong_variable["TG_Variable"])
-                        buf += '\t$formatText_explanation2.setType(8);\n'
-                        buf += '\tFormatText $formatText_explanation3 = new FormatText();\n'
-                        buf += '\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
-                               '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
-                               ');\n ' % (
-                                   self.beizhong_variable["HDLch_Variable"], self.beizhong_variable["HDLch_Variable"])
-                        buf += '\t$formatText_explanation3.setType(8);\n'
-                        buf += '\tFormatText $formatText_explanation4 = new FormatText();\n'
-                        buf += '\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
-                               '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
-                               ');\n ' % (
-                                   self.beizhong_variable["LDLch_Variable"], self.beizhong_variable["LDLch_Variable"])
-                        buf += '\t$formatText_explanation4.setType(8);\n'
-                        buf += '\tDescription explanation = new Description();\n'
-                        buf += '\texplanation.addFormatText($formatText_explanation1);\n'
-                        buf += '\texplanation.addFormatText($formatText_explanation2);\n'
-                        buf += '\texplanation.addFormatText($formatText_explanation3);\n'
-                        buf += '\texplanation.addFormatText($formatText_explanation4);\n'
-                        buf += '\tArrayList<Description> explanationList = new ArrayList<>();\n'
-                        buf += '\texplanationList.add(explanation);\n'
-                        buf += '\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
-                               '"入院筛查").getTaskById("血脂紊乱").setExplanation(explanationList);\n '
+                    buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
+                           '"入院筛查").getTaskById("血脂紊乱").getExplanation()==null){\n '
+                    buf += '\t\tFormatText $formatText_explanation1 = new FormatText();\n'
+                    buf += '\t\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
+                           '"TC_Variable").getResult() + " " + $Patient.getLabTestResult("TC_Variable").getUnit() ' \
+                           ');\n '
+                    buf += '\t\t$formatText_explanation1.setType(8);\n'
+                    buf += '\t\tFormatText $formatText_explanation2 = new FormatText();\n'
+                    buf += '\t\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
+                           '"TG_Variable").getResult() + "-" + $Patient.getLabTestResult("TG_Variable").getUnit() ' \
+                           ');\n '
+                    buf += '\t\t$formatText_explanation2.setType(8);\n'
+                    buf += '\t\tFormatText $formatText_explanation3 = new FormatText();\n'
+                    buf += '\t\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
+                           '"HDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
+                           '"HDLch_Variable").getUnit());\n '
+                    buf += '\t\t$formatText_explanation3.setType(8);\n'
+                    buf += '\t\tFormatText $formatText_explanation4 = new FormatText();\n'
+                    buf += '\t\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
+                           '"LDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
+                           '"LDLch_Variable").getUnit());\n '
+                    buf += '\t\t$formatText_explanation4.setType(8);\n'
+                    buf += '\t\tDescription explanation = new Description();\n'
+                    buf += '\t\texplanation.addFormatText($formatText_explanation1);\n'
+                    buf += '\t\texplanation.addFormatText($formatText_explanation2);\n'
+                    buf += '\t\texplanation.addFormatText($formatText_explanation3);\n'
+                    buf += '\t\texplanation.addFormatText($formatText_explanation4);\n'
+                    buf += '\t\tArrayList<Description> explanationList = new ArrayList<>();\n'
+                    buf += '\t\texplanationList.add(explanation);\n'
+                    buf += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
+                           '"入院筛查").getTaskById("血脂紊乱").setExplanation(explanationList);\n '
+                    buf += '\t}\n'
+                    # if self.drool != 1:
+                    #     buf += '\tFormatText $formatText_explanation1 = new FormatText();\n'
+                    #     buf += '\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
+                    #            '"%s").getResult() + " " + $Patient.getLabTestResult("%s").getUnit() ' \
+                    #            ');\n ' % (self.beizhong_variable["TC_Variable"], self.beizhong_variable["TC_Variable"])
+                    #     buf += '\t$formatText_explanation1.setType(8);\n'
+                    #     buf += '\tFormatText $formatText_explanation2 = new FormatText();\n'
+                    #     buf += '\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
+                    #            '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
+                    #            ');\n ' % (self.beizhong_variable["TG_Variable"], self.beizhong_variable["TG_Variable"])
+                    #     buf += '\t$formatText_explanation2.setType(8);\n'
+                    #     buf += '\tFormatText $formatText_explanation3 = new FormatText();\n'
+                    #     buf += '\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
+                    #            '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
+                    #            ');\n ' % (
+                    #                self.beizhong_variable["HDLch_Variable"], self.beizhong_variable["HDLch_Variable"])
+                    #     buf += '\t$formatText_explanation3.setType(8);\n'
+                    #     buf += '\tFormatText $formatText_explanation4 = new FormatText();\n'
+                    #     buf += '\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
+                    #            '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
+                    #            ');\n ' % (
+                    #                self.beizhong_variable["LDLch_Variable"], self.beizhong_variable["LDLch_Variable"])
+                    #     buf += '\t$formatText_explanation4.setType(8);\n'
+                    #     buf += '\tDescription explanation = new Description();\n'
+                    #     buf += '\texplanation.addFormatText($formatText_explanation1);\n'
+                    #     buf += '\texplanation.addFormatText($formatText_explanation2);\n'
+                    #     buf += '\texplanation.addFormatText($formatText_explanation3);\n'
+                    #     buf += '\texplanation.addFormatText($formatText_explanation4);\n'
+                    #     buf += '\tArrayList<Description> explanationList = new ArrayList<>();\n'
+                    #     buf += '\texplanationList.add(explanation);\n'
+                    #     buf += '\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
+                    #            '"入院筛查").getTaskById("血脂紊乱").setExplanation(explanationList);\n '
                 self.Recommendation = 0
         buf += '}'
         if (ctx.ELSE() != None):
@@ -746,18 +730,12 @@ class Drl_Match(clipsparserListener):
             if (self.filename != 'Entrance' and self.filename != 'MS_DietDataJudge'
                     and self.filename != 'MS_SportDataJudge'
                     and self.filename != 'MS_MSRiskDegreeEvaluation'):
-                # buf = '$r.CurrentName.add( %s );\n' % name
-                # buf += '$r.CurrentName.remove( "%s.drl");\n' % self.filename
-                # buf += 'update($r);'
                 buf += 'drools.setFocus("%s");' % name[1:-5]
                 self.drool = 1
 
             else:
-                # buf = '$r.CurrentName.add( %s );\n' % name
-                # buf += 'update($r);'
                 buf += 'drools.setFocus("%s");' % name[1:-5]
                 self.drool = 1
-            # buf += '$r.LastName.add( "%s.drl" );' % self.last_filename
         # strcat函数
         elif functionname == 'str-cat':
             buf = ''
@@ -801,12 +779,6 @@ class Drl_Match(clipsparserListener):
                 buf = ''
             # 判断变量数据类型，并将其存入variable
             if not (name in self.variable):
-                # if ('$' + name) in self.string_var:
-                #     self.variable[name] = 'String'
-                # elif ('$' + name) in self.double_var:
-                #     self.variable[name] = 'double'
-                # elif ('$' + name) in self.boolean_var:
-                #     self.variable[name] = 'boolean'
                 if value in self.string_var:
                     self.variable[name] = 'String'
                 elif value in self.double_var:
@@ -853,19 +825,10 @@ class Drl_Match(clipsparserListener):
                 buf = '$r.%s( %s )' % (functionname, para)
             elif functionname == 'FactUsed':
                 if self.load == 0:
-                    # 原始版本
-                    # buf = '$r.%s( %s );\n' % (functionname, para)
-                    # buf += '$r.CurrentName.remove( "%s.drl");\n' % self.filename
-                    # 2019.12.19更新'
-                    # buf = '$r.CurrentName.remove( "%s.drl");\n' % self.filename
-                    # buf += 'update($r)'
                     buf = ''
                 else:
-                    # 原始版本
-                    # buf = '$r.%s( %s )' % (functionname, para)
                     buf = ''
             elif functionname == 'InterpretationIndex':
-                # buf = '$r.%s( %s,"%s.drl" )' % (functionname, para, self.filename)
                 # 2019.12.19修改
                 buf = ''
             elif functionname == 'Recommendation':
@@ -873,7 +836,18 @@ class Drl_Match(clipsparserListener):
                 self.description = 1
                 self.formatText_number += 1
                 buf = 'FormatText $formatText%s = new FormatText();\n' % self.formatText_number
-                buf += '$formatText%s.setValue( %s )' % (self.formatText_number, para)
+                buf += '$formatText%s.setValue( %s + " " )' % (self.formatText_number, para)
+                if "无糖尿病" in para:
+                    buf += '$formatText%s.setType(5)' % self.formatText_number
+                elif "高血压:无" in para:
+                    buf += '$formatText%s.setType(5)' % self.formatText_number
+                elif "血脂正常" in para:
+                    buf += '$formatText%s.setType(5)' % self.formatText_number
+                else:
+                    buf += '$formatText%s.setType(3)' % self.formatText_number
+                if 'MS_MS_mergexml' in self.filename:
+                    if '糖尿病' in para:
+                        self.ms_ms_mergexml = '糖尿病'
             elif (functionname == 'Check' or functionname == 'NotifyOrNot'):
                 buf = '$f.%s( $r,%s )' % (functionname, para)
                 if functionname == 'NotifyOrNot':
@@ -943,21 +917,60 @@ class Drl_Match(clipsparserListener):
 
             elif self.data_model[attr_name] == 'LabTestResult':
                 if self.patient_variable[attr_name] == 'double':
-                    self.convert_string += 'double %s = 0;\n' % attr_value
                     if attr_name in self.beizhong_variable:
-                        self.convert_string += 'if (!($Patient.getLabTestResult("%s").getResult().equals(""))) {\n' % (
+                        self.convert_string += 'double %s;\n' % attr_value
+                        self.convert_string += 'if ($Patient.getLabTestResult("%s") == null){\n' % self.beizhong_variable[attr_name]
+                        self.convert_string += '\t %s = 0.0;\n' % attr_value
+                        self.convert_string += '}else{\n'
+                        self.convert_string += '\tif (!($Patient.getLabTestResult("%s").getResult().equals(""))) {\n' % (
                             self.beizhong_variable[attr_name])
-                        self.convert_string += '\t%s = Double.parseDouble( $Patient.getLabTestResult("%s").getResult(' \
-                                               ') );\n' % (attr_value, self.beizhong_variable[attr_name])
+                        self.convert_string += '\t\t%s = Double.parseDouble( $Patient.getLabTestResult(' \
+                                               '"%s").getResult() );\n' % (attr_value, self.beizhong_variable[attr_name])
+                        self.convert_string += '\t}else{\n'
+                        self.convert_string += '\t\t%s = 0.0;\n' % attr_value
+                        self.convert_string += '\t}\n'
+                        self.convert_string += '}\n'
                     else:
-                        self.convert_string += 'if (!($Patient.getLabTestResult("%s").getResult().equals(""))) {\n' % (
+                        self.convert_string += 'double %s;\n' % attr_value
+                        self.convert_string += 'if ($Patient.getLabTestResult("%s") == null){\n' % attr_name
+                        self.convert_string += '\t %s = 0.0;\n' % attr_value
+                        self.convert_string += '}else{\n'
+                        self.convert_string += '\tif (!($Patient.getLabTestResult("%s").getResult().equals(""))) {\n' % (
                             attr_name)
-                        self.convert_string += '\t%s = Double.parseDouble( $Patient.getLabTestResult("%s").getResult(' \
-                                               ') );\n' % (attr_value, attr_name)
-                    self.convert_string += '}\n'
+                        self.convert_string += '\t\t%s = Double.parseDouble( $Patient.getLabTestResult(' \
+                                               '"%s").getResult() );\n' % (attr_value, attr_name)
+                        self.convert_string += '\t}else{\n'
+                        self.convert_string += '\t\t%s = 0.0;\n' % attr_value
+                        self.convert_string += '\t}\n'
+                        self.convert_string += '}\n'
                 elif self.patient_variable[attr_name] == 'String':
-                    self.convert_string += 'String %s = $LabTestResult_%s.getResult();\n' % (
-                        attr_value, attr_name)
+                    if attr_name in self.beizhong_variable:
+                        self.convert_string += 'String %s;\n' % attr_value
+                        self.convert_string += 'if ($Patient.getLabTestResult("%s") == null){\n' % self.beizhong_variable[attr_name]
+                        self.convert_string += '\t %s = null;\n' % attr_value
+                        self.convert_string += '}else{\n'
+                        self.convert_string += '\tif (!($Patient.getLabTestResult("%s").getResult().equals(""))) {\n' % (
+                            self.beizhong_variable[attr_name])
+                        self.convert_string += '\t%s = $Patient.getLabTestResult("%s").getResult();\n' % (
+                            attr_value, self.beizhong_variable[attr_name])
+                        self.convert_string += '\t}else{\n'
+                        self.convert_string += '\t\t%s = null;\n' % attr_value
+                        self.convert_string += '\t}\n'
+                        self.convert_string += '}\n'
+                    else:
+                        elf.convert_string += 'String %s;\n' % attr_value
+                        self.convert_string += 'if ($Patient.getLabTestResult("%s") == null){\n' % attr_name
+                        self.convert_string += '\t %s = null;\n' % attr_value
+                        self.convert_string += '}else{\n'
+                        self.convert_string += '\tif (!($Patient.getLabTestResult("%s").getResult().equals(""))) {\n' % (
+                            attr_name)
+                        self.convert_string += '\t%s = $Patient.getLabTestResult("%s").getResult();\n' % (
+                            attr_value, attr_name)
+                        self.convert_string += '\t}else{\n'
+                        self.convert_string += '\t\t%s = null;\n' % attr_value
+                        self.convert_string += '\t}\n'
+                        self.convert_string += '}\n'
+
             elif self.data_model[attr_name] == 'PastHistory':
                 if self.patient_variable[attr_name] == 'String':
                     if attr_name in self.beizhong_variable:
@@ -974,6 +987,8 @@ class Drl_Match(clipsparserListener):
                     else:
                         self.convert_string += 'String %s = (!$familyhistory_diagnosis_%s.isEmpty())? "YES":"NO";\n' % (
                             attr_value, attr_name)
+
+            # PhysicalSign待处理缺省数据
             elif self.data_model[attr_name] == 'PhysicalSign':
                 if self.patient_variable[attr_name] == 'double':
                     self.convert_string += 'double %s = 0;\n' % attr_value
@@ -988,7 +1003,7 @@ class Drl_Match(clipsparserListener):
                         self.convert_string += '\t%s = Double.parseDouble( $Patient.getPhysicalSign("%s").getValue() ' \
                                                ');\n' % (attr_value, attr_name)
                     self.convert_string += '}\n'
-                else:
+                elif self.patient_variable[attr_name] == 'String':
                     if attr_name in self.beizhong_variable[attr_name]:
                         self.convert_string += 'Sring %s = $Patient.getPhysicalSign("%s").getValue();\n' \
                                                % (attr_value, self.beizhong_variable[attr_name])
@@ -1009,14 +1024,6 @@ class Drl_Match(clipsparserListener):
                     self.convert_string += '\t%s = "YES";\n' % attr_value
                     self.convert_string += '}\n'
             elif self.data_model[attr_name] == 'Diagnosis':
-                # if self.patient_variable[attr_name] == 'String':
-                #     self.convert_string += 'String %s = "";\n' % attr_value
-                #     self.convert_string += 'for (i=0;i<$Patient.getDiagnosisList().size();i++) {\n'
-                #     self.convert_string += '\ttemp = $Patient.getDiagnosisList().get(0).getItemName().split("/");\n'
-                #     self.convert_string += '\tfor(j=0;j<temp.length;j++){\n'
-                #     self.convert_string += '\t\tif(temp[0].equals("%s")){\n' % attr_name
-                #     self.convert_string += '\t\t\t%s = temp[1];\n' % attr_value
-                #     self.convert_string += '\t\t'
                 pass
         try:
             ctx.constaint(0).getChild(0).getChild(0).getChild(0).getChild(0).getChild(0).getRuleIndex()
@@ -1041,13 +1048,6 @@ class Drl_Match(clipsparserListener):
                     elif self.data_model[attr_name] == 'LabTestResult':
                         x = '$labTestResultList : labTestResultList != null'
                         x += '\n'
-                        # 北肿数据
-                        if attr_name in self.beizhong_variable:
-                            x += '$LabTestResult_%s : LabTestResult( itemName == "%s" ) from $labTestResultList' % (
-                                self.beizhong_variable[attr_name], self.beizhong_variable[attr_name])
-                        else:
-                            x += '$LabTestResult_%s : LabTestResult( itemName == "%s" ) from $labTestResultList' % (
-                                attr_name, attr_name)
                     # 待调整
                     elif self.data_model[attr_name] == 'PastHistory':
                         self.history = 1
