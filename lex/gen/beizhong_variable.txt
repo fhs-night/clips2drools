@@ -1,0 +1,1 @@
+{"HbA1c": "血红蛋白", "FBG_Variable": "葡萄糖", "twoHPBG_Variable": "葡萄糖", "Sex": "sex", "FBG_OGTT_Variable": "葡萄糖", "twoHPBG_OGTT_Variable": "OGTT120'血糖", "LDLch_Variable": "低密度脂蛋白胆固醇", "TC_Variable": "总胆固醇", "HDLch_Variable": "高密度脂蛋白胆固醇", "TG_Variable": "甘油三酯", "UA_Variable": "尿酸", "UUA": "尿酸", "UPh": "酸碱度", "Cr_Variable": "血肌酐"}
