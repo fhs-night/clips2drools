@@ -377,17 +377,17 @@ class Drl_Match(clipsparserListener):
                         buf += '\t\t$formatText_explanation1.setType(8);\n'
                         buf += '\t\tFormatText $formatText_explanation2 = new FormatText();\n'
                         buf += '\t\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
-                               '"TG_Variable").getResult() + "-" + $Patient.getLabTestResult("TG_Variable").getUnit() ' \
+                               '"TG_Variable").getResult() + " " + $Patient.getLabTestResult("TG_Variable").getUnit() ' \
                                ');\n '
                         buf += '\t\t$formatText_explanation2.setType(8);\n'
                         buf += '\t\tFormatText $formatText_explanation3 = new FormatText();\n'
                         buf += '\t\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
-                               '"HDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
+                               '"HDLch_Variable").getResult() + " " + $Patient.getLabTestResult(' \
                                '"HDLch_Variable").getUnit());\n '
                         buf += '\t\t$formatText_explanation3.setType(8);\n'
                         buf += '\t\tFormatText $formatText_explanation4 = new FormatText();\n'
                         buf += '\t\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
-                               '"LDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
+                               '"LDLch_Variable").getResult() + " " + $Patient.getLabTestResult(' \
                                '"LDLch_Variable").getUnit());\n '
                     buf += '\t\t$formatText_explanation4.setType(8);\n'
                     buf += '\t\tDescription explanation = new Description();\n'
@@ -555,9 +555,9 @@ class Drl_Match(clipsparserListener):
             rhs += '\t\t\t$sta_formatText.setType(0);\n'
             rhs += '\t\t\tDescription $datanotice_description1 = new Description();\n'
             rhs += '\t\t\t$datanotice_description1.addFormatText($sta_formatText);\n'
-            rhs += '\t\t\tArrayList<Description> $datanotice_explanation1 = new ArrayList<>();\n'
-            rhs += '\t\t\t$datanotice_explanation1.add($datanotice_description1);\n'
-            rhs += '\t\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").getTaskById("血脂紊乱").setExplanation($datanotice_explanation1);\n'
+            rhs += '\t\t\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").getTaskById("血脂紊乱").getExplanation().size()<2){\n'
+            rhs += '\t\t\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").getTaskById("血脂紊乱").getExplanation().add($datanotice_description1);\n'
+            rhs += '\t\t\t}\n'
             rhs += '\t\t}\n'
             rhs += '\t}\n'
         rhs += '\t$r.DataNotice.Data.clear();\n'
@@ -931,7 +931,7 @@ class Drl_Match(clipsparserListener):
                 self.description = 1
                 self.formatText_number += 1
                 buf = 'FormatText $formatText%s = new FormatText();\n' % self.formatText_number
-                buf += '$formatText%s.setValue( %s + " " )' % (self.formatText_number, para)
+                buf += '$formatText%s.setValue( %s + " " );\n' % (self.formatText_number, para)
                 if "无糖尿病" in para:
                     buf += '$formatText%s.setType(5)' % self.formatText_number
                 elif "高血压:无" in para:

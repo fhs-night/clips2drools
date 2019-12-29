@@ -57,7 +57,7 @@ def main():
         str += listener.getDRL(a)  # 翻译后内容
         # member_variable.update(listener.variable)
         mis.update(listener.mis_var)
-        output = 'F:/java_project/drl_test/src/main/resources/beizhong_rules/' + filename[i - 1] + '.drl'
+        output = 'F:/java_project/rule-engine/engine/src/test/resources/kbs/' + filename[i - 1] + '.drl'
         new_drl_file = open(output, 'w', encoding="utf-8")
         new_drl_file.write(str)  # 写入新文件
         new_drl_file.close()
