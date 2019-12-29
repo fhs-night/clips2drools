@@ -349,24 +349,46 @@ class Drl_Match(clipsparserListener):
                     buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
                            '"入院筛查").getTaskById("血脂紊乱").getExplanation()==null){\n '
                     buf += '\t\tFormatText $formatText_explanation1 = new FormatText();\n'
-                    buf += '\t\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
-                           '"TC_Variable").getResult() + " " + $Patient.getLabTestResult("TC_Variable").getUnit() ' \
-                           ');\n '
-                    buf += '\t\t$formatText_explanation1.setType(8);\n'
-                    buf += '\t\tFormatText $formatText_explanation2 = new FormatText();\n'
-                    buf += '\t\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
-                           '"TG_Variable").getResult() + "-" + $Patient.getLabTestResult("TG_Variable").getUnit() ' \
-                           ');\n '
-                    buf += '\t\t$formatText_explanation2.setType(8);\n'
-                    buf += '\t\tFormatText $formatText_explanation3 = new FormatText();\n'
-                    buf += '\t\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
-                           '"HDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
-                           '"HDLch_Variable").getUnit());\n '
-                    buf += '\t\t$formatText_explanation3.setType(8);\n'
-                    buf += '\t\tFormatText $formatText_explanation4 = new FormatText();\n'
-                    buf += '\t\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
-                           '"LDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
-                           '"LDLch_Variable").getUnit());\n '
+                    if "TC_Variable" in self.beizhong_variable:
+                        buf += '\t\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
+                               '"%s").getResult() + " " + $Patient.getLabTestResult("%s").getUnit() ' \
+                               ');\n ' % (self.beizhong_variable["TC_Variable"], self.beizhong_variable["TC_Variable"])
+                        buf += '\t\t$formatText_explanation1.setType(8);\n'
+                        buf += '\t\tFormatText $formatText_explanation2 = new FormatText();\n'
+                        buf += '\t\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
+                               '"%s").getResult() + " " + $Patient.getLabTestResult("%s").getUnit() ' \
+                               ');\n ' % (self.beizhong_variable["TG_Variable"], self.beizhong_variable["TG_Variable"])
+                        buf += '\t\t$formatText_explanation2.setType(8);\n'
+                        buf += '\t\tFormatText $formatText_explanation3 = new FormatText();\n'
+                        buf += '\t\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
+                               '"%s").getResult() + " " + $Patient.getLabTestResult("%s").getUnit() ' \
+                               ');\n ' % (
+                               self.beizhong_variable["HDLch_Variable"], self.beizhong_variable["HDLch_Variable"])
+                        buf += '\t\t$formatText_explanation3.setType(8);\n'
+                        buf += '\t\tFormatText $formatText_explanation4 = new FormatText();\n'
+                        buf += '\t\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
+                               '"%s").getResult() + " " + $Patient.getLabTestResult("%s").getUnit() ' \
+                               ');\n ' % (
+                               self.beizhong_variable["LDLch_Variable"], self.beizhong_variable["LDLch_Variable"])
+                    else:
+                        buf += '\t\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
+                               '"TC_Variable").getResult() + " " + $Patient.getLabTestResult("TC_Variable").getUnit() ' \
+                               ');\n '
+                        buf += '\t\t$formatText_explanation1.setType(8);\n'
+                        buf += '\t\tFormatText $formatText_explanation2 = new FormatText();\n'
+                        buf += '\t\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
+                               '"TG_Variable").getResult() + "-" + $Patient.getLabTestResult("TG_Variable").getUnit() ' \
+                               ');\n '
+                        buf += '\t\t$formatText_explanation2.setType(8);\n'
+                        buf += '\t\tFormatText $formatText_explanation3 = new FormatText();\n'
+                        buf += '\t\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
+                               '"HDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
+                               '"HDLch_Variable").getUnit());\n '
+                        buf += '\t\t$formatText_explanation3.setType(8);\n'
+                        buf += '\t\tFormatText $formatText_explanation4 = new FormatText();\n'
+                        buf += '\t\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
+                               '"LDLch_Variable").getResult() + "-" + $Patient.getLabTestResult(' \
+                               '"LDLch_Variable").getUnit());\n '
                     buf += '\t\t$formatText_explanation4.setType(8);\n'
                     buf += '\t\tDescription explanation = new Description();\n'
                     buf += '\t\texplanation.addFormatText($formatText_explanation1);\n'
@@ -378,38 +400,6 @@ class Drl_Match(clipsparserListener):
                     buf += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
                            '"入院筛查").getTaskById("血脂紊乱").setExplanation(explanationList);\n '
                     buf += '\t}\n'
-                    # if self.drool != 1:
-                    #     buf += '\tFormatText $formatText_explanation1 = new FormatText();\n'
-                    #     buf += '\t$formatText_explanation1.setValue( "总胆固醇 " + $Patient.getLabTestResult(' \
-                    #            '"%s").getResult() + " " + $Patient.getLabTestResult("%s").getUnit() ' \
-                    #            ');\n ' % (self.beizhong_variable["TC_Variable"], self.beizhong_variable["TC_Variable"])
-                    #     buf += '\t$formatText_explanation1.setType(8);\n'
-                    #     buf += '\tFormatText $formatText_explanation2 = new FormatText();\n'
-                    #     buf += '\t$formatText_explanation2.setValue( "甘油三脂 " + $Patient.getLabTestResult(' \
-                    #            '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
-                    #            ');\n ' % (self.beizhong_variable["TG_Variable"], self.beizhong_variable["TG_Variable"])
-                    #     buf += '\t$formatText_explanation2.setType(8);\n'
-                    #     buf += '\tFormatText $formatText_explanation3 = new FormatText();\n'
-                    #     buf += '\t$formatText_explanation3.setValue( "HDL-C " + $Patient.getLabTestResult(' \
-                    #            '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
-                    #            ');\n ' % (
-                    #                self.beizhong_variable["HDLch_Variable"], self.beizhong_variable["HDLch_Variable"])
-                    #     buf += '\t$formatText_explanation3.setType(8);\n'
-                    #     buf += '\tFormatText $formatText_explanation4 = new FormatText();\n'
-                    #     buf += '\t$formatText_explanation4.setValue( "LDL-C " + $Patient.getLabTestResult(' \
-                    #            '"%s").getResult() + "-" + $Patient.getLabTestResult("%s").getUnit() ' \
-                    #            ');\n ' % (
-                    #                self.beizhong_variable["LDLch_Variable"], self.beizhong_variable["LDLch_Variable"])
-                    #     buf += '\t$formatText_explanation4.setType(8);\n'
-                    #     buf += '\tDescription explanation = new Description();\n'
-                    #     buf += '\texplanation.addFormatText($formatText_explanation1);\n'
-                    #     buf += '\texplanation.addFormatText($formatText_explanation2);\n'
-                    #     buf += '\texplanation.addFormatText($formatText_explanation3);\n'
-                    #     buf += '\texplanation.addFormatText($formatText_explanation4);\n'
-                    #     buf += '\tArrayList<Description> explanationList = new ArrayList<>();\n'
-                    #     buf += '\texplanationList.add(explanation);\n'
-                    #     buf += '\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
-                    #            '"入院筛查").getTaskById("血脂紊乱").setExplanation(explanationList);\n '
                 self.Recommendation = 0
         buf += '}'
         if (ctx.ELSE() != None):
@@ -469,6 +459,110 @@ class Drl_Match(clipsparserListener):
             rhs += ('%s' % self.getDRL(pctx2))
             if self.getDRL(pctx2) != '' and ctx.action().index(pctx2) != len(ctx.action()) - 1:
                 rhs += '\n'
+        # 缺失数据处理
+        rhs += '\n//输出缺省数据\n'
+        rhs += 'if ($r.DataNotice.Data.size() != 0) {\n'
+        if ('MS_DM' in self.filename) or (self.ms_ms_mergexml == '糖尿病'):
+            rhs += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").getTaskById("糖尿病") ' \
+                   '== null){\n '  # 待调整
+            rhs += '\t\tFormatText $sta_formatText1 = new FormatText();\n'
+            rhs += '\t\t$sta_formatText1.setValue( "糖尿病" );\n'  # 待调整
+            rhs += '\t\t$sta_formatText1.setType(2);\n'
+            rhs += '\t\tFormatText $sta_formatText2 = new FormatText();\n'
+            rhs += '\t\t$sta_formatText2.setValue( "未检测到患者血糖记录" );\n'  # 待调整
+            rhs += '\t\t$sta_formatText2.setType(0);\n'
+            rhs += '\t\tTask $datanotice_task = new Task();\n'
+            rhs += '\t\t$datanotice_task.setTaskID("糖尿病");\n'  # 待调整
+            rhs += '\t\tFormatText $datanotice_formatText = new FormatText();\n'
+            rhs += '\t\t$datanotice_formatText.setValue( "待确认" );\n'
+            rhs += '\t\t$datanotice_formatText.setType(4);\n'
+            rhs += '\t\tDescription $datanotice_description = new Description();\n'
+            rhs += '\t\t$datanotice_description.addFormatText($sta_formatText1);\n'
+            rhs += '\t\t$datanotice_description.addFormatText($datanotice_formatText);\n'
+            rhs += '\t\tArrayList<Description> $datanotice_explanation = new ArrayList<>();\n'
+            rhs += '\t\tDescription $remind_description = new Description();\n'
+            rhs += '\t\t$remind_description.addFormatText($sta_formatText2);\n'
+            rhs += '\t\t$datanotice_explanation.add($remind_description);\n'
+            rhs += '\t\t$datanotice_task.setExplanation($datanotice_explanation);\n'
+            rhs += '\t\t$datanotice_task.setDescription($datanotice_description);\n'
+            rhs += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").addTask(' \
+                   '$datanotice_task);\n'  # 待调整
+            rhs += '\t}\n'
+        elif ('MS_Hypertension' in self.filename) or (self.ms_ms_mergexml == '高血压'):
+            rhs += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").getTaskById("高血压") ' \
+                   '== null){\n '  # 待调整
+            rhs += '\t\tFormatText $sta_formatText1 = new FormatText();\n'
+            rhs += '\t\t$sta_formatText1.setValue( "高血压" );\n'  # 待调整
+            rhs += '\t\t$sta_formatText1.setType(2);\n'
+            rhs += '\t\tFormatText $sta_formatText2 = new FormatText();\n'
+            rhs += '\t\t$sta_formatText2.setValue( "未检测到患者血压记录" );\n'  # 待调整
+            rhs += '\t\t$sta_formatText2.setType(0);\n'
+            rhs += '\t\tTask $datanotice_task = new Task();\n'
+            rhs += '\t\t$datanotice_task.setTaskID("高血压");\n'  # 待调整
+            rhs += '\t\tFormatText $datanotice_formatText = new FormatText();\n'
+            rhs += '\t\t$datanotice_formatText.setValue( "待确认" );\n'
+            rhs += '\t\t$datanotice_formatText.setType(4);\n'
+            rhs += '\t\tDescription $datanotice_description = new Description();\n'
+            rhs += '\t\t$datanotice_description.addFormatText($sta_formatText1);\n'
+            rhs += '\t\t$datanotice_description.addFormatText($datanotice_formatText);\n'
+            rhs += '\t\tArrayList<Description> $datanotice_explanation = new ArrayList<>();\n'
+            rhs += '\t\tDescription $remind_description = new Description();\n'
+            rhs += '\t\t$remind_description.addFormatText($sta_formatText2);\n'
+            rhs += '\t\t$datanotice_explanation.add($remind_description);\n'
+            rhs += '\t\t$datanotice_task.setExplanation($datanotice_explanation);\n'
+            rhs += '\t\t$datanotice_task.setDescription($datanotice_description);\n'
+            rhs += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").addTask(' \
+                   '$datanotice_task);\n'  # 待调整
+            rhs += '\t}\n'
+        elif ('MS_Dyslipidemia' in self.filename) or (self.ms_ms_mergexml == '血脂紊乱'):
+            rhs += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").getTaskById("血脂紊乱") ' \
+                   '== null){\n '  # 待调整
+            rhs += '\t\tFormatText $sta_formatText1 = new FormatText();\n'
+            rhs += '\t\t$sta_formatText1.setValue( "血脂紊乱" );\n'  # 待调整
+            rhs += '\t\t$sta_formatText1.setType(2);\n'
+            rhs += '\t\tFormatText $sta_formatText2 = new FormatText();\n'
+            rhs += '\t\t$sta_formatText2.setValue( "未检测到患者血脂紊乱相关记录" );\n'  # 待调整
+            rhs += '\t\t$sta_formatText2.setType(0);\n'
+            rhs += '\t\tTask $datanotice_task = new Task();\n'
+            rhs += '\t\t$datanotice_task.setTaskID("血脂紊乱");\n'  # 待调整
+            rhs += '\t\tFormatText $datanotice_formatText = new FormatText();\n'
+            rhs += '\t\t$datanotice_formatText.setValue( "待确认" );\n'
+            rhs += '\t\t$datanotice_formatText.setType(4);\n'
+            rhs += '\t\tDescription $datanotice_description = new Description();\n'
+            rhs += '\t\t$datanotice_description.addFormatText($sta_formatText1);\n'
+            rhs += '\t\t$datanotice_description.addFormatText($datanotice_formatText);\n'
+            rhs += '\t\tArrayList<Description> $datanotice_explanation = new ArrayList<>();\n'
+            rhs += '\t\tDescription $remind_description = new Description();\n'
+            rhs += '\t\t$remind_description.addFormatText($sta_formatText2);\n'
+            rhs += '\t\t$datanotice_explanation.add($remind_description);\n'
+            rhs += '\t\t$datanotice_task.setExplanation($datanotice_explanation);\n'
+            rhs += '\t\t$datanotice_task.setDescription($datanotice_description);\n'
+            rhs += '\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").addTask(' \
+                   '$datanotice_task);\n'  # 待调整
+            rhs += '\t} else {\n'
+            if "LDLch_Variable" in self.beizhong_variable:
+                rhs += '\t\tif ($r.DataNotice.Data.contains("%s")||$r.DataNotice.Data.contains(' \
+                       '"%s")||$r.DataNotice.Data.contains("%s")||$r.DataNotice.Data.contains(' \
+                       '"%s")) {\n' % (
+                       self.beizhong_variable["LDLch_Variable"], self.beizhong_variable["TC_Variable"],
+                       self.beizhong_variable["TG_Variable"], self.beizhong_variable["HDLch_Variable"])
+            else:
+                rhs += '\t\tif ($r.DataNotice.Data.contains("LDLch_Variable")||$r.DataNotice.Data.contains(' \
+                       '"TG_Variable")||$r.DataNotice.Data.contains("HDLch_Variable")||$r.DataNotice.Data.contains(' \
+                       '"TC_Variable")) {\n'
+            rhs += '\t\t\tFormatText $sta_formatText = new FormatText();\n'
+            rhs += '\t\t\t$sta_formatText.setValue( "患者血脂相关记录缺失" );\n'
+            rhs += '\t\t\t$sta_formatText.setType(0);\n'
+            rhs += '\t\t\tDescription $datanotice_description1 = new Description();\n'
+            rhs += '\t\t\t$datanotice_description1.addFormatText($sta_formatText);\n'
+            rhs += '\t\t\tArrayList<Description> $datanotice_explanation1 = new ArrayList<>();\n'
+            rhs += '\t\t\t$datanotice_explanation1.add($datanotice_description1);\n'
+            rhs += '\t\t\t$MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem("入院筛查").getTaskById("血脂紊乱").setExplanation($datanotice_explanation1);\n'
+            rhs += '\t\t}\n'
+            rhs += '\t}\n'
+        rhs += '\t$r.DataNotice.Data.clear();\n'
+        rhs += '}\n'
+
         buf = self.setrule(lhs, rhs, rule_name)
         self.setDRL(ctx, buf)
         self.construct = ''
@@ -484,6 +578,7 @@ class Drl_Match(clipsparserListener):
         self.convert_string = ''
         self.history = 0
         self.drool = 0
+        self.ms_ms_mergexml = ''
 
     def exitDeffunction(self, ctx: clipsparser.DeffunctionContext):
         function_name = self.getDRL(ctx.symbol_expression())
@@ -958,7 +1053,7 @@ class Drl_Match(clipsparserListener):
                         self.convert_string += '\t}\n'
                         self.convert_string += '}\n'
                     else:
-                        elf.convert_string += 'String %s;\n' % attr_value
+                        self.convert_string += 'String %s;\n' % attr_value
                         self.convert_string += 'if ($Patient.getLabTestResult("%s") == null){\n' % attr_name
                         self.convert_string += '\t %s = null;\n' % attr_value
                         self.convert_string += '}else{\n'

@@ -16,7 +16,7 @@ def main():
     filename = []  # 仅存放所有clp文件名，不包括后缀
     # member_variable = {}#存放Patient所有成员变量
     mis = {}
-    path = 'F:/vico/clips/rule3/'
+    path = 'F:/规则语言/clips/rule3/'
     for root, dirs, files in os.walk(path):
         for file in files:
             if file.endswith('.clp'):
@@ -57,7 +57,7 @@ def main():
         str += listener.getDRL(a)  # 翻译后内容
         # member_variable.update(listener.variable)
         mis.update(listener.mis_var)
-        output = 'F:/javaproject/drl_test/src/main/resources/beizhong_rules/' + filename[i - 1] + '.drl'
+        output = 'F:/java_project/drl_test/src/main/resources/beizhong_rules/' + filename[i - 1] + '.drl'
         new_drl_file = open(output, 'w', encoding="utf-8")
         new_drl_file.write(str)  # 写入新文件
         new_drl_file.close()
