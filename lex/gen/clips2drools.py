@@ -6,6 +6,8 @@ from lex.gen.clipsparser import clipsparser
 import json
 
 
+# 测试
+
 class droolsemitter(clipsparserListener):
     # 存放defrule或deffunction结构中出现的变量
     var_name_list = []
