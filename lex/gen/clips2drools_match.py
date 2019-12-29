@@ -71,7 +71,7 @@ class Drl_Match(clipsparserListener):
         self.data_model = json.loads(dict_new)
 
         # 北肿数据模型
-        r = open('beizhong_variable.txt', 'r', encoding='utf-8')
+        r = open('test.txt', 'r', encoding='utf-8')
         dict_new = r.read()
         r.close()
         self.beizhong_variable = json.loads(dict_new)
