@@ -280,7 +280,7 @@ class Drl_Match(clipsparserListener):
                            '"入院筛查").getTaskById("糖尿病").setExplanation(explanationList);\n '
                     buf += '\t}\n'
 
-                elif 'MS_Hypertension' in self.filename:
+                elif ('MS_Hypertension' in self.filename) or (self.ms_ms_mergexml == '高血压'):
                     buf += '\tDescription $description = new Description();\n'
                     buf += '\tif ($MDTModel.getProcess("北肿诊断").getScenario("肿瘤多学科门诊决策").getProblem(' \
                            '"入院筛查").getTaskById("高血压")!=null){\n '
@@ -469,13 +469,20 @@ class Drl_Match(clipsparserListener):
             rhs += '\t\t$sta_formatText1.setValue( "糖尿病" );\n'  # 待调整
             rhs += '\t\t$sta_formatText1.setType(2);\n'
             rhs += '\t\tFormatText $sta_formatText2 = new FormatText();\n'
-            rhs += '\t\t$sta_formatText2.setValue( "未检测到患者血糖记录" );\n'  # 待调整
+            if "FBG_OGTT_Variable" in self.beizhong_variable:
+                rhs += '\t\tif ($r.DataNotice.Data.contains("%s")){\n' % self.beizhong_variable["FBG_OGTT_Variable"]
+            else:
+                rhs += '\t\tif ($r.DataNotice.Data.contains("FBG_OGTT_Variable")){\n'
+            rhs += '\t\t\t$sta_formatText2.setValue( "未检测到患者OGTT血糖记录" );\n'
+            rhs += '\t\t}else{\n'
+            rhs += '\t\t\t$sta_formatText2.setValue( "未检测到患者血糖记录" );\n'  # 待调整
+            rhs += '\t\t}\n'
             rhs += '\t\t$sta_formatText2.setType(0);\n'
-            rhs += '\t\tTask $datanotice_task = new Task();\n'
-            rhs += '\t\t$datanotice_task.setTaskID("糖尿病");\n'  # 待调整
             rhs += '\t\tFormatText $datanotice_formatText = new FormatText();\n'
             rhs += '\t\t$datanotice_formatText.setValue( "待确认" );\n'
             rhs += '\t\t$datanotice_formatText.setType(4);\n'
+            rhs += '\t\tTask $datanotice_task = new Task();\n'
+            rhs += '\t\t$datanotice_task.setTaskID("糖尿病");\n'  # 待调整
             rhs += '\t\tDescription $datanotice_description = new Description();\n'
             rhs += '\t\t$datanotice_description.addFormatText($sta_formatText1);\n'
             rhs += '\t\t$datanotice_description.addFormatText($datanotice_formatText);\n'
@@ -943,6 +950,8 @@ class Drl_Match(clipsparserListener):
                 if 'MS_MS_mergexml' in self.filename:
                     if '糖尿病' in para:
                         self.ms_ms_mergexml = '糖尿病'
+                    elif '高血压' in para:
+                        self.ms_ms_mergexml = '高血压'
             elif (functionname == 'Check' or functionname == 'NotifyOrNot'):
                 buf = '$f.%s( $r,%s )' % (functionname, para)
                 if functionname == 'NotifyOrNot':
